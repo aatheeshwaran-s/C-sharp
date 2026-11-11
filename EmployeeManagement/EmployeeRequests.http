@@ -1,0 +1,44 @@
+### 1. READ ALL Employees (GET)
+GET http://localhost:5000/api/employees
+
+###
+
+### 2. READ ONE Employee by ID (GET)
+GET http://localhost:5000/api/employees/101
+
+###
+
+### 3. READ Non-existent Employee (GET 404 test)
+GET http://localhost:5000/api/employees/999
+
+###
+
+### 4. CREATE a New Employee (POST)
+POST http://localhost:5000/api/employees
+Content-Type: application/json
+
+{
+  "id": 103,
+  "name": "Charlie Brown",
+  "department": "Finance",
+  "salary": 80000
+}
+
+###
+
+### 5. UPDATE an Employee (PUT)
+PUT http://localhost:5000/api/employees/101
+Content-Type: application/json
+
+{
+  "id": 101,
+  "name": "Alice Johnson",
+  "department": "Engineering",
+  "salary": 95000
+}
+
+###
+
+### 6. DELETE an Employee (DELETE)
+DELETE http://localhost:5000/api/employees/102
+

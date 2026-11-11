@@ -1,18 +1,12 @@
-namespace EmployeeManagement;
+var builder = WebApplication.CreateBuilder(args);
 
-class Program
-{
-    static void Main(string[] args)
-    {
-        // Day 1 - Topic 1: Variables and Data Types
-        int employeeId = 101;
-        string employeeName = "Alice Johnson";
-        decimal salary = 75000.50m;
-        bool isFullTime = true;
+// Register controllers with the dependency injection container
+builder.Services.AddControllers();
 
-        Console.WriteLine($"ID: {employeeId}");
-        Console.WriteLine($"Name: {employeeName}");
-        Console.WriteLine($"Salary: {salary}");
-        Console.WriteLine($"Full-Time: {isFullTime}");
-    }
-}
+var app = builder.Build();
+
+// Map controller routes (e.g. /api/employees)
+app.MapControllers();
+
+// Start the web server and listen for incoming HTTP requests
+app.Run();
