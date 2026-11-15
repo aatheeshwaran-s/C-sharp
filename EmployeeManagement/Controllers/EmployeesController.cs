@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using EmployeeManagement.Models;
+using EmployeeManagement.Services;
 
 namespace EmployeeManagement.Controllers;
 
@@ -7,75 +8,91 @@ namespace EmployeeManagement.Controllers;
 [Route("api/[controller]")]
 public class EmployeesController : ControllerBase
 {
-    // In-memory list simulating a database table for Employees
-    private static readonly List<Employee> _employees = new()
-    {
-        new Employee { Id = 101, Name = "Alice Johnson", Department = "IT", Salary = 75000 },
-        new Employee { Id = 102, Name = "Bob Smith", Department = "HR", Salary = 60000 }
-    };
+    private readonly IEmployeeService _employeeService;
+    private readonly ILogger<EmployeesController> _logger;
 
-    // 1. READ ALL: GET http://localhost:5000/api/employees
+    // Day 07: Constructor Injection (ASP.NET Core DI provides these instances automatically)
+    public EmployeesController(IEmployeeService employeeService, ILogger<EmployeesController> logger)
+    {
+        _employeeService = employeeService;
+        _logger = logger;
+    }
+
+    // 1. GET ALL: GET /api/employees
     [HttpGet]
     public IActionResult GetAll()
     {
-        return Ok(_employees);
+        _logger.LogInformation("Fetching all employees.");
+        var employees = _employeeService.GetAll();
+        return Ok(employees);
     }
 
-    // 2. READ ONE: GET http://localhost:5000/api/employees/101
+    // 2. GET BY ID: GET /api/employees/{id}
     [HttpGet("{id}")]
     public IActionResult GetById(int id)
     {
-        var employee = _employees.FirstOrDefault(e => e.Id == id);
+        _logger.LogInformation("Fetching employee with ID {Id}.", id);
+        var employee = _employeeService.GetById(id);
         if (employee == null)
         {
-            return NotFound($"Employee with ID {id} not found."); // HTTP 404
+            _logger.LogWarning("Employee with ID {Id} not found.", id);
+            return NotFound($"Employee with ID {id} not found.");
         }
-        return Ok(employee); // HTTP 200
+        return Ok(employee);
     }
 
-    // 3. CREATE: POST http://localhost:5000/api/employees
+    // 3. CREATE: POST /api/employees
     [HttpPost]
     public IActionResult Create([FromBody] Employee newEmployee)
     {
-        // Simple validation: check if ID already exists
-        if (_employees.Any(e => e.Id == newEmployee.Id))
+        _logger.LogInformation("Attempting to create employee with ID {Id}.", newEmployee.Id);
+        try
         {
-            return BadRequest($"Employee with ID {newEmployee.Id} already exists."); // HTTP 400
+            var created = _employeeService.Create(newEmployee);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
-
-        _employees.Add(newEmployee);
-        // Returns HTTP 201 Created with the location of the new resource
-        return CreatedAtAction(nameof(GetById), new { id = newEmployee.Id }, newEmployee);
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Validation failure while creating employee.");
+            return BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Conflict error: duplicate employee ID.");
+            return Conflict(ex.Message);
+        }
     }
 
-    // 4. UPDATE: PUT http://localhost:5000/api/employees/101
+    // 4. UPDATE: PUT /api/employees/{id}
     [HttpPut("{id}")]
     public IActionResult Update(int id, [FromBody] Employee updatedEmployee)
     {
-        var employee = _employees.FirstOrDefault(e => e.Id == id);
-        if (employee == null)
+        _logger.LogInformation("Updating employee with ID {Id}.", id);
+        try
         {
-            return NotFound($"Employee with ID {id} not found."); // HTTP 404
+            var success = _employeeService.Update(id, updatedEmployee);
+            if (!success)
+            {
+                return NotFound($"Employee with ID {id} not found.");
+            }
+            return Ok(updatedEmployee);
         }
-
-        employee.Name = updatedEmployee.Name;
-        employee.Department = updatedEmployee.Department;
-        employee.Salary = updatedEmployee.Salary;
-
-        return Ok(employee); // HTTP 200
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    // 5. DELETE: DELETE http://localhost:5000/api/employees/101
+    // 5. DELETE: DELETE /api/employees/{id}
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
-        var employee = _employees.FirstOrDefault(e => e.Id == id);
-        if (employee == null)
+        _logger.LogInformation("Deleting employee with ID {Id}.", id);
+        var success = _employeeService.Delete(id);
+        if (!success)
         {
-            return NotFound($"Employee with ID {id} not found."); // HTTP 404
+            return NotFound($"Employee with ID {id} not found.");
         }
-
-        _employees.Remove(employee);
-        return NoContent(); // HTTP 204 (Success, nothing to display)
+        return NoContent();
     }
 }
