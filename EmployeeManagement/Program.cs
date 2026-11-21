@@ -5,10 +5,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Register Controllers
 builder.Services.AddControllers();
 
-// Day 07: Dependency Injection Registration
-// We register EmployeeService as a Singleton so in-memory state persists across requests.
-// (In Day 09 with EF Core / database, we will switch database services to Scoped).
-builder.Services.AddSingleton<IEmployeeService, EmployeeService>();
+var mongoConnectionString = builder.Configuration["MongoDB:ConnectionString"];
+var mongoDatabaseName = builder.Configuration["MongoDB:DatabaseName"];
+
+if (string.IsNullOrWhiteSpace(mongoConnectionString) || string.IsNullOrWhiteSpace(mongoDatabaseName))
+{
+    throw new InvalidOperationException(
+        "MongoDB configuration is missing. Set MongoDB:ConnectionString and MongoDB:DatabaseName.");
+}
+
+builder.Services.AddSingleton<IEmployeeService>(
+    _ => new MongoEmployeeService(mongoConnectionString, mongoDatabaseName));
 
 var app = builder.Build();
 
