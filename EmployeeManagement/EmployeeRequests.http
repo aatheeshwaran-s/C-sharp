@@ -1,20 +1,20 @@
 ### 1. READ ALL Employees from MongoDB (GET)
-GET http://localhost:5000/api/employees
+GET http://localhost:5050/api/employees
 
 ###
 
 ### 2. READ ONE Employee by ID (GET)
-GET http://localhost:5000/api/employees/101
+GET http://localhost:5050/api/employees/101
 
 ###
 
 ### 3. READ Non-existent Employee (GET 404 test)
-GET http://localhost:5000/api/employees/999
+GET http://localhost:5050/api/employees/999
 
 ###
 
 ### 4. CREATE a New Employee in MongoDB (POST)
-POST http://localhost:5000/api/employees
+POST http://localhost:5050/api/employees
 Content-Type: application/json
 
 {
@@ -27,7 +27,7 @@ Content-Type: application/json
 ###
 
 ### 5. UPDATE an Employee in MongoDB (PUT)
-PUT http://localhost:5000/api/employees/101
+PUT http://localhost:5050/api/employees/101
 Content-Type: application/json
 
 {
@@ -40,4 +40,4 @@ Content-Type: application/json
 ###
 
 ### 6. DELETE an Employee from MongoDB (DELETE)
-DELETE http://localhost:5000/api/employees/102
+DELETE http://localhost:5050/api/employees/102
