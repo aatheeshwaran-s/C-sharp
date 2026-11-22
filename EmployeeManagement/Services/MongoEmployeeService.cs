@@ -12,11 +12,17 @@ public class MongoEmployeeService : IEmployeeService
     public MongoEmployeeService(IOptions<MongoDbSettings> settings, ILogger<MongoEmployeeService> logger)
     {
         _logger = logger;
-        var client = new MongoClient(settings.Value.ConnectionString);
+
+        var clientSettings = MongoClientSettings.FromConnectionString(settings.Value.ConnectionString);
+        // Fail fast if MongoDB server is offline instead of waiting 30 seconds
+        clientSettings.ServerSelectionTimeout = TimeSpan.FromSeconds(3);
+
+        var client = new MongoClient(clientSettings);
         var database = client.GetDatabase(settings.Value.DatabaseName);
         _employeesCollection = database.GetCollection<Employee>(settings.Value.CollectionName);
 
-        SeedInitialDataAsync().GetAwaiter().GetResult();
+        // Run seed in background so web server starts listening immediately
+        _ = Task.Run(SeedInitialDataAsync);
     }
 
     private async Task SeedInitialDataAsync()

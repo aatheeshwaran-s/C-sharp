@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using EmployeeManagement.Models;
 using EmployeeManagement.Services;
+using MongoDB.Driver;
 
 namespace EmployeeManagement.Controllers;
 
@@ -22,8 +23,21 @@ public class EmployeesController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         _logger.LogInformation("Fetching all employees from database.");
-        var employees = await _employeeService.GetAllAsync();
-        return Ok(employees);
+        try
+        {
+            var employees = await _employeeService.GetAllAsync();
+            return Ok(employees);
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogError(ex, "MongoDB connection timeout.");
+            return StatusCode(503, new { error = "Cannot connect to MongoDB. Please ensure your MongoDB service is running on mongodb://localhost:27017." });
+        }
+        catch (MongoConnectionException ex)
+        {
+            _logger.LogError(ex, "MongoDB connection refused.");
+            return StatusCode(503, new { error = "Cannot connect to MongoDB. Please ensure your MongoDB service is running on mongodb://localhost:27017." });
+        }
     }
 
     // 2. GET BY ID: GET /api/employees/{id}
@@ -31,13 +45,20 @@ public class EmployeesController : ControllerBase
     public async Task<IActionResult> GetById(int id)
     {
         _logger.LogInformation("Fetching employee with ID {Id}.", id);
-        var employee = await _employeeService.GetByIdAsync(id);
-        if (employee == null)
+        try
         {
-            _logger.LogWarning("Employee with ID {Id} not found.", id);
-            return NotFound(new { message = $"Employee with ID {id} not found." });
+            var employee = await _employeeService.GetByIdAsync(id);
+            if (employee == null)
+            {
+                _logger.LogWarning("Employee with ID {Id} not found.", id);
+                return NotFound(new { message = $"Employee with ID {id} not found." });
+            }
+            return Ok(employee);
         }
-        return Ok(employee);
+        catch (Exception ex) when (ex is TimeoutException or MongoConnectionException)
+        {
+            return StatusCode(503, new { error = "Cannot connect to MongoDB. Please ensure your MongoDB service is running on mongodb://localhost:27017." });
+        }
     }
 
     // 3. CREATE: POST /api/employees
@@ -59,6 +80,11 @@ public class EmployeesController : ControllerBase
         {
             _logger.LogWarning(ex, "Conflict error creating employee.");
             return Conflict(new { error = ex.Message });
+        }
+        catch (Exception ex) when (ex is TimeoutException or MongoConnectionException)
+        {
+            _logger.LogError(ex, "MongoDB connection failed.");
+            return StatusCode(503, new { error = "Cannot connect to MongoDB. Please ensure your MongoDB service is running on mongodb://localhost:27017." });
         }
         catch (Exception ex)
         {
@@ -85,10 +111,9 @@ public class EmployeesController : ControllerBase
         {
             return BadRequest(new { error = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is TimeoutException or MongoConnectionException)
         {
-            _logger.LogError(ex, "Unexpected error communicating with database.");
-            return StatusCode(500, new { error = "Internal server error. Ensure database is running." });
+            return StatusCode(503, new { error = "Cannot connect to MongoDB. Please ensure your MongoDB service is running on mongodb://localhost:27017." });
         }
     }
 
@@ -106,10 +131,9 @@ public class EmployeesController : ControllerBase
             }
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is TimeoutException or MongoConnectionException)
         {
-            _logger.LogError(ex, "Unexpected error communicating with database.");
-            return StatusCode(500, new { error = "Internal server error. Ensure database is running." });
+            return StatusCode(503, new { error = "Cannot connect to MongoDB. Please ensure your MongoDB service is running on mongodb://localhost:27017." });
         }
     }
 }
