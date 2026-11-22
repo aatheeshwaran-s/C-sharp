@@ -37,7 +37,7 @@ public class MongoEmployeeService : IEmployeeService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not seed initial MongoDB data. Ensure MongoDB server is running on the configured host.");
+            _logger.LogWarning(ex, "Could not seed initial MongoDB data. Ensure MongoDB is running on mongodb://localhost:27017.");
         }
     }
 
@@ -53,33 +53,30 @@ public class MongoEmployeeService : IEmployeeService
 
     public async Task<Employee> CreateAsync(Employee employee)
     {
-        if (employee.Salary < 0)
-        {
-            throw new ArgumentException("Salary cannot be negative.");
-        }
-
-        if (string.IsNullOrWhiteSpace(employee.Name))
-        {
-            throw new ArgumentException("Employee name is required.");
-        }
+        Validate(employee);
 
         if (await ExistsAsync(employee.Id))
         {
             throw new InvalidOperationException($"Employee with ID {employee.Id} already exists.");
         }
 
-        await _employeesCollection.InsertOneAsync(employee);
+        try
+        {
+            await _employeesCollection.InsertOneAsync(employee);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw new InvalidOperationException($"Employee with ID {employee.Id} already exists.", ex);
+        }
+
         return employee;
     }
 
     public async Task<bool> UpdateAsync(int id, Employee updatedEmployee)
     {
-        if (updatedEmployee.Salary < 0)
-        {
-            throw new ArgumentException("Salary cannot be negative.");
-        }
+        Validate(updatedEmployee);
 
-        updatedEmployee.Id = id; // Ensure ID matches the route
+        updatedEmployee.Id = id;
         var result = await _employeesCollection.ReplaceOneAsync(e => e.Id == id, updatedEmployee);
         return result.IsAcknowledged && result.MatchedCount > 0;
     }
@@ -94,5 +91,18 @@ public class MongoEmployeeService : IEmployeeService
     {
         var count = await _employeesCollection.CountDocumentsAsync(e => e.Id == id);
         return count > 0;
+    }
+
+    private static void Validate(Employee employee)
+    {
+        if (employee.Salary < 0)
+        {
+            throw new ArgumentException("Salary cannot be negative.");
+        }
+
+        if (string.IsNullOrWhiteSpace(employee.Name))
+        {
+            throw new ArgumentException("Employee name is required.");
+        }
     }
 }

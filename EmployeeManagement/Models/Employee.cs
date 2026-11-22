@@ -6,6 +6,7 @@ namespace EmployeeManagement.Models;
 public class Employee
 {
     [BsonId]
+    [BsonRepresentation(BsonType.Int32)]
     public int Id { get; set; }
 
     [BsonElement("name")]
