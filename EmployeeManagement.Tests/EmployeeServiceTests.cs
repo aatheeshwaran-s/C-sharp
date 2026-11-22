@@ -6,19 +6,18 @@ namespace EmployeeManagement.Tests;
 
 public class EmployeeServiceTests
 {
-    private readonly EmployeeService _sut; // SUT = System Under Test
+    private readonly EmployeeService _sut;
 
     public EmployeeServiceTests()
     {
-        // Each test gets a fresh EmployeeService instance
         _sut = new EmployeeService();
     }
 
     [Fact]
-    public void GetAll_ReturnsInitialEmployees()
+    public async Task GetAll_ReturnsInitialEmployees()
     {
         // Act
-        var result = _sut.GetAll();
+        var result = await _sut.GetAllAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -27,13 +26,13 @@ public class EmployeeServiceTests
     }
 
     [Fact]
-    public void GetById_WhenEmployeeExists_ReturnsEmployee()
+    public async Task GetById_WhenEmployeeExists_ReturnsEmployee()
     {
         // Arrange
         int existingId = 101;
 
         // Act
-        var result = _sut.GetById(existingId);
+        var result = await _sut.GetByIdAsync(existingId);
 
         // Assert
         Assert.NotNull(result);
@@ -42,20 +41,20 @@ public class EmployeeServiceTests
     }
 
     [Fact]
-    public void GetById_WhenEmployeeDoesNotExist_ReturnsNull()
+    public async Task GetById_WhenEmployeeDoesNotExist_ReturnsNull()
     {
         // Arrange
         int nonExistingId = 999;
 
         // Act
-        var result = _sut.GetById(nonExistingId);
+        var result = await _sut.GetByIdAsync(nonExistingId);
 
         // Assert
         Assert.Null(result);
     }
 
     [Fact]
-    public void Create_ValidEmployee_AddsAndReturnsEmployee()
+    public async Task Create_ValidEmployee_AddsAndReturnsEmployee()
     {
         // Arrange
         var newEmployee = new Employee
@@ -67,8 +66,8 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var created = _sut.Create(newEmployee);
-        var retrieved = _sut.GetById(103);
+        var created = await _sut.CreateAsync(newEmployee);
+        var retrieved = await _sut.GetByIdAsync(103);
 
         // Assert
         Assert.NotNull(created);
@@ -78,7 +77,7 @@ public class EmployeeServiceTests
     }
 
     [Fact]
-    public void Create_NegativeSalary_ThrowsArgumentException()
+    public async Task Create_NegativeSalary_ThrowsArgumentException()
     {
         // Arrange
         var invalidEmployee = new Employee
@@ -86,33 +85,33 @@ public class EmployeeServiceTests
             Id = 104,
             Name = "Dave",
             Department = "IT",
-            Salary = -5000 // Negative salary is invalid
+            Salary = -5000
         };
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => _sut.Create(invalidEmployee));
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => _sut.CreateAsync(invalidEmployee));
         Assert.Equal("Salary cannot be negative.", ex.Message);
     }
 
     [Fact]
-    public void Create_DuplicateId_ThrowsInvalidOperationException()
+    public async Task Create_DuplicateId_ThrowsInvalidOperationException()
     {
         // Arrange
         var duplicateEmployee = new Employee
         {
-            Id = 101, // Already belongs to Alice Johnson
+            Id = 101,
             Name = "Imposter",
             Department = "Security",
             Salary = 50000
         };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => _sut.Create(duplicateEmployee));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.CreateAsync(duplicateEmployee));
         Assert.Contains("already exists", ex.Message);
     }
 
     [Fact]
-    public void Update_ExistingEmployee_ReturnsTrueAndUpdatesDetails()
+    public async Task Update_ExistingEmployee_ReturnsTrueAndUpdatesDetails()
     {
         // Arrange
         int idToUpdate = 101;
@@ -125,8 +124,8 @@ public class EmployeeServiceTests
         };
 
         // Act
-        var isUpdated = _sut.Update(idToUpdate, updatedData);
-        var employee = _sut.GetById(idToUpdate);
+        var isUpdated = await _sut.UpdateAsync(idToUpdate, updatedData);
+        var employee = await _sut.GetByIdAsync(idToUpdate);
 
         // Assert
         Assert.True(isUpdated);
@@ -136,28 +135,28 @@ public class EmployeeServiceTests
     }
 
     [Fact]
-    public void Update_NonExistingEmployee_ReturnsFalse()
+    public async Task Update_NonExistingEmployee_ReturnsFalse()
     {
         // Arrange
         int nonExistingId = 999;
         var updatedData = new Employee { Id = nonExistingId, Name = "Nobody", Salary = 50000 };
 
         // Act
-        var isUpdated = _sut.Update(nonExistingId, updatedData);
+        var isUpdated = await _sut.UpdateAsync(nonExistingId, updatedData);
 
         // Assert
         Assert.False(isUpdated);
     }
 
     [Fact]
-    public void Delete_ExistingEmployee_ReturnsTrueAndRemoves()
+    public async Task Delete_ExistingEmployee_ReturnsTrueAndRemoves()
     {
         // Arrange
         int idToDelete = 102;
 
         // Act
-        var isDeleted = _sut.Delete(idToDelete);
-        var searchResult = _sut.GetById(idToDelete);
+        var isDeleted = await _sut.DeleteAsync(idToDelete);
+        var searchResult = await _sut.GetByIdAsync(idToDelete);
 
         // Assert
         Assert.True(isDeleted);
@@ -165,13 +164,13 @@ public class EmployeeServiceTests
     }
 
     [Fact]
-    public void Delete_NonExistingEmployee_ReturnsFalse()
+    public async Task Delete_NonExistingEmployee_ReturnsFalse()
     {
         // Arrange
         int nonExistingId = 999;
 
         // Act
-        var isDeleted = _sut.Delete(nonExistingId);
+        var isDeleted = await _sut.DeleteAsync(nonExistingId);
 
         // Assert
         Assert.False(isDeleted);

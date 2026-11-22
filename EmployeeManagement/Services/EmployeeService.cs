@@ -10,17 +10,18 @@ public class EmployeeService : IEmployeeService
         new Employee { Id = 102, Name = "Bob Smith", Department = "HR", Salary = 60000 }
     };
 
-    public IEnumerable<Employee> GetAll()
+    public Task<IEnumerable<Employee>> GetAllAsync()
     {
-        return _employees.ToList();
+        return Task.FromResult<IEnumerable<Employee>>(_employees.ToList());
     }
 
-    public Employee? GetById(int id)
+    public Task<Employee?> GetByIdAsync(int id)
     {
-        return _employees.FirstOrDefault(e => e.Id == id);
+        var emp = _employees.FirstOrDefault(e => e.Id == id);
+        return Task.FromResult(emp);
     }
 
-    public Employee Create(Employee employee)
+    public Task<Employee> CreateAsync(Employee employee)
     {
         if (employee.Salary < 0)
         {
@@ -32,21 +33,21 @@ public class EmployeeService : IEmployeeService
             throw new ArgumentException("Employee name is required.");
         }
 
-        if (Exists(employee.Id))
+        if (_employees.Any(e => e.Id == employee.Id))
         {
             throw new InvalidOperationException($"Employee with ID {employee.Id} already exists.");
         }
 
         _employees.Add(employee);
-        return employee;
+        return Task.FromResult(employee);
     }
 
-    public bool Update(int id, Employee updatedEmployee)
+    public Task<bool> UpdateAsync(int id, Employee updatedEmployee)
     {
-        var existing = GetById(id);
+        var existing = _employees.FirstOrDefault(e => e.Id == id);
         if (existing == null)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         if (updatedEmployee.Salary < 0)
@@ -57,23 +58,23 @@ public class EmployeeService : IEmployeeService
         existing.Name = updatedEmployee.Name;
         existing.Department = updatedEmployee.Department;
         existing.Salary = updatedEmployee.Salary;
-        return true;
+        return Task.FromResult(true);
     }
 
-    public bool Delete(int id)
+    public Task<bool> DeleteAsync(int id)
     {
-        var existing = GetById(id);
+        var existing = _employees.FirstOrDefault(e => e.Id == id);
         if (existing == null)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         _employees.Remove(existing);
-        return true;
+        return Task.FromResult(true);
     }
 
-    public bool Exists(int id)
+    public Task<bool> ExistsAsync(int id)
     {
-        return _employees.Any(e => e.Id == id);
+        return Task.FromResult(_employees.Any(e => e.Id == id));
     }
 }

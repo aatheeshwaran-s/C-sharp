@@ -1,18 +1,20 @@
+using EmployeeManagement.Models;
 using EmployeeManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure MongoDB options from appsettings.json
+builder.Services.Configure<MongoDbSettings>(
+    builder.Configuration.GetSection("MongoDbSettings"));
+
 // Register Controllers
 builder.Services.AddControllers();
 
-// Day 07: Dependency Injection Registration
-// We register EmployeeService as a Singleton so in-memory state persists across requests.
-// (In Day 09 with EF Core / database, we will switch database services to Scoped).
-builder.Services.AddSingleton<IEmployeeService, EmployeeService>();
+// Register MongoEmployeeService as a Singleton (recommended for MongoClient and Mongo collections)
+builder.Services.AddSingleton<IEmployeeService, MongoEmployeeService>();
 
 var app = builder.Build();
 
-// Map routes to controllers
 app.MapControllers();
 
 app.Run();

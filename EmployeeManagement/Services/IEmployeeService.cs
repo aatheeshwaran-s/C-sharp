@@ -4,10 +4,10 @@ namespace EmployeeManagement.Services;
 
 public interface IEmployeeService
 {
-    IEnumerable<Employee> GetAll();
-    Employee? GetById(int id);
-    Employee Create(Employee employee);
-    bool Update(int id, Employee updatedEmployee);
-    bool Delete(int id);
-    bool Exists(int id);
+    Task<IEnumerable<Employee>> GetAllAsync();
+    Task<Employee?> GetByIdAsync(int id);
+    Task<Employee> CreateAsync(Employee employee);
+    Task<bool> UpdateAsync(int id, Employee updatedEmployee);
+    Task<bool> DeleteAsync(int id);
+    Task<bool> ExistsAsync(int id);
 }

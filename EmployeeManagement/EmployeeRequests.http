@@ -1,4 +1,4 @@
-### 1. READ ALL Employees (GET)
+### 1. READ ALL Employees from MongoDB (GET)
 GET http://localhost:5000/api/employees
 
 ###
@@ -13,7 +13,7 @@ GET http://localhost:5000/api/employees/999
 
 ###
 
-### 4. CREATE a New Employee (POST)
+### 4. CREATE a New Employee in MongoDB (POST)
 POST http://localhost:5000/api/employees
 Content-Type: application/json
 
@@ -21,24 +21,23 @@ Content-Type: application/json
   "id": 103,
   "name": "Charlie Brown",
   "department": "Finance",
-  "salary": 80000
+  "salary": 85000
 }
 
 ###
 
-### 5. UPDATE an Employee (PUT)
+### 5. UPDATE an Employee in MongoDB (PUT)
 PUT http://localhost:5000/api/employees/101
 Content-Type: application/json
 
 {
   "id": 101,
   "name": "Alice Johnson",
-  "department": "Engineering",
-  "salary": 95000
+  "department": "Engineering Lead",
+  "salary": 98000
 }
 
 ###
 
-### 6. DELETE an Employee (DELETE)
+### 6. DELETE an Employee from MongoDB (DELETE)
 DELETE http://localhost:5000/api/employees/102
-
